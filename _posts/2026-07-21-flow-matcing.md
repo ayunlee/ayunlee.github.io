@@ -451,58 +451,54 @@ reflow를 반복할수록 유도된 모델 경로는 점점 더 직선에 가까
 
 가장 단순한 설정에서 flow matching 학습 방식을 요약해보자
 
-Source sample을 z0, target sample을 z1이라고 하겠다. 두 샘플 사이를 직선으로 연결하면 중간 샘플은 다음과 같다.
+Source sample을 $z_0$, target sample을 $z_1$이라고 하겠다. 두 샘플 사이를 직선으로 연결하면 중간 샘플은 다음과 같다.
 
-zt=(1−t)z0+tz1
+$$
+z_t=(1-t)z_0+tz_1
+$$
 
 이 경로의 속도는 매우 간단하다.
 
-dztdt=z1−z0
+$$
+\frac{dz_t}{dt}=z_1-z_0
+$$
 
 따라서 모델은 다음 loss로 학습할 수 있다.
 
-ℒFM=𝔼[∥vθ(zt,t,c)−(z1−z0)∥2]
+$$
+\mathcal{L}_{\mathrm{FM}}
+=
+\mathbb{E}
+\left[
+\left\|v_\theta(z_t,t,c)-(z_1-z_0)\right\|_2^2
+\right]
+$$
 
 학습 절차는 다음과 같다.
 
-1. Target data 을 뽑는다.
-    
-    z1
-    
-2. Source distribution에서 을 뽑는다.
-    
-    z0
-    
-3. t∼U(0,1)을 뽑는다.
-4. zt=(1−t)z0+tz1을 만든다.
-5. 정답 속도 를 계산한다.
-    
-    z1−z0
-    
+1. Target data $z_1$을 뽑는다.
+2. Source distribution에서 $z_0$을 뽑는다.
+3. $t\sim\mathcal{U}(0,1)$을 뽑는다.
+4. $z_t=(1-t)z_0+tz_1$을 만든다.
+5. 정답 속도 $z_1-z_0$을 계산한다.
 6. 신경망이 이 속도를 예측하도록 MSE로 학습한다.
 
 앞서 설명했듯이 실제 flow matching의 핵심은 marginal vector field를 직접 계산하지 않아도, 이렇게 쉽게 계산되는 conditional velocity를 회귀하는 것으로 같은 최적해를 얻을 수 있다는 점이다.
 
-같은 zt가 여러 source-target pair에서 만들어질 수 있다. MSE로 학습한 모델은 그 지점에서 가능한 속도들의 조건부 평균을 예측한다. 이것이 개별 pair의 간단한 직선 속도를 이용해 전체 분포를 이동시키는 vector field를 학습할 수 있는 이유이다.
+같은 $z_t$가 여러 source-target pair에서 만들어질 수 있다. MSE로 학습한 모델은 그 지점에서 가능한 속도들의 조건부 평균을 예측한다. 이것이 개별 pair의 간단한 직선 속도를 이용해 전체 분포를 이동시키는 vector field를 학습할 수 있는 이유이다.
 
 학습이 끝나면 target sample은 필요하지 않다.
 
-1. Source distribution에서 을 뽑는다.
-    
-    z0
-    
-2. 학습한 vector field를 따라 에서 까지 ODE를 적분한다.
-    
-    t=0
-    
-    t=1
-    
+1. Source distribution에서 $z_0$을 뽑는다.
+2. 학습한 vector field를 따라 $t=0$에서 $t=1$까지 ODE를 적분한다.
 
 가장 단순한 Euler solver는 다음과 같다.
 
-zk+1=zk+Δtvθ(zk,tk,c)
+$$
+z_{k+1}=z_k+\Delta t\,v_\theta(z_k,t_k,c)
+$$
 
-예를 들어 10-step generation이라면 Δt=0.1로 열 번 업데이트한다.
+예를 들어 10-step generation이라면 $\Delta t=0.1$로 열 번 업데이트한다.
 
 Flow matching이 항상 one-step model인 것은 아니다. Vector field가 충분히 매끄럽고 생성 경로가 충분히 곧으면 적은 step으로도 잘 동작할 가능성이 높다. 반대로 경로가 복잡하거나 vector field가 급격히 변하면 더 많은 solver step이 필요하다.
 
